@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Lead {
+  id           String   @id @default(cuid())
+  name         String
+  businessName String
+  phone        String
+  email        String
+  serviceType  String
+  stage        String   @default("new_lead")
+  assignedTo   String   @default("Sal")
+  tags         String   @default("CA_BYLDR_LEAD")
+  mockupReady  Boolean  @default(false)
+  automationStarted  Boolean  @default(false)
+  automationDay      Int      @default(0)
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tasks     Task[]
+  activities Activity[]
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      String   @default("pending")
+  priority    String   @default("medium")
+  assignedTo  String
+  leadId      String?
+  dueDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lead Lead? @relation(fields: [leadId], references: [id], onDelete: SetNull)
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  type      String
+  message   String
+  leadId    String?
+  createdAt DateTime @default(now())
+
+  lead Lead? @relation(fields: [leadId], references: [id], onDelete: SetNull)
+}
