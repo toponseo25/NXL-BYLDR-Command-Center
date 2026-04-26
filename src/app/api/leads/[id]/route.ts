@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { z } from 'zod'
+
+const updateLeadSchema = z.object({
+  stage: z.string().optional(),
+  assignedTo: z.string().optional(),
+  mockupReady: z.boolean().optional(),
+  automationStarted: z.boolean().optional(),
+  automationDay: z.number().int().min(0).max(14).optional(),
+  notes: z.string().optional(),
+})
 
 // GET /api/leads/[id] — Return a single lead with tasks and activities
 export async function GET(
@@ -35,17 +45,25 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await request.json()
-    const { stage, assignedTo, mockupReady, automationStarted, automationDay, notes } = body
+
+    const result = updateLeadSchema.safeParse(body)
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.error.flatten().fieldErrors },
+        { status: 400 }
+      )
+    }
+    const data = result.data
 
     const lead = await db.lead.update({
       where: { id },
       data: {
-        ...(stage !== undefined && { stage }),
-        ...(assignedTo !== undefined && { assignedTo }),
-        ...(mockupReady !== undefined && { mockupReady }),
-        ...(automationStarted !== undefined && { automationStarted }),
-        ...(automationDay !== undefined && { automationDay }),
-        ...(notes !== undefined && { notes }),
+        ...(data.stage !== undefined && { stage: data.stage }),
+        ...(data.assignedTo !== undefined && { assignedTo: data.assignedTo }),
+        ...(data.mockupReady !== undefined && { mockupReady: data.mockupReady }),
+        ...(data.automationStarted !== undefined && { automationStarted: data.automationStarted }),
+        ...(data.automationDay !== undefined && { automationDay: data.automationDay }),
+        ...(data.notes !== undefined && { notes: data.notes }),
       },
       include: { tasks: true, activities: true },
     })

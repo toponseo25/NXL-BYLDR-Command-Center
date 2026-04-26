@@ -11,6 +11,7 @@ import {
   Moon,
   Sun,
   Monitor,
+  LogOut,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -78,9 +79,7 @@ export function Sidebar() {
     >
       {/* Logo */}
       <div className="flex h-16 items-center gap-3 px-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-          <Zap className="h-5 w-5 text-primary-foreground" />
-        </div>
+        <img src="/vsual-logo.png" alt="VSUAL" className="h-8 w-8 rounded-lg" />
         <div>
           <h1 className="text-lg font-bold tracking-tight">VSUAL OS</h1>
           <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Business OS</p>
@@ -162,6 +161,19 @@ export function Sidebar() {
             </Button>
           ))}
         </div>
+      </div>
+
+      {/* Sign Out */}
+      <div className="px-3 pb-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-3 px-3 text-muted-foreground hover:text-destructive"
+          onClick={() => window.location.reload()}
+        >
+          <LogOut className="h-4 w-4" />
+          Sign Out
+        </Button>
       </div>
 
       {/* Theme Toggle */}

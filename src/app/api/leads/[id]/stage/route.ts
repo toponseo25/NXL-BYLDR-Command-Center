@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { z } from 'zod'
+
+const stageSchema = z.object({
+  stage: z.string().min(1, 'Stage is required'),
+})
 
 // PUT /api/leads/[id]/stage — Change pipeline stage
 export async function PUT(
@@ -9,11 +14,11 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await request.json()
-    const { stage } = body
-
-    if (!stage) {
-      return NextResponse.json({ error: 'Stage is required' }, { status: 400 })
+    const result = stageSchema.safeParse(body)
+    if (!result.success) {
+      return NextResponse.json({ error: 'Invalid stage' }, { status: 400 })
     }
+    const stage = result.data.stage
 
     // Get current lead for the activity message
     const currentLead = await db.lead.findUnique({ where: { id } })

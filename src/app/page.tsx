@@ -11,8 +11,11 @@ import { AutomationView } from '@/components/vsual/automation-view';
 import { AlertsView } from '@/components/vsual/alerts-view';
 import { NewLeadDialog } from '@/components/vsual/new-lead-dialog';
 import { LeadDetailSheet } from '@/components/vsual/lead-detail-sheet';
+import { NxlCommandCenter } from '@/components/nxl/nxl-command-center';
+import { LandingPage } from '@/components/portal/landing-page';
+import { LoginPage } from '@/components/portal/login-page';
 import { useVSUALStore } from '@/lib/store';
-import { Zap } from 'lucide-react';
+import Image from 'next/image';
 
 const viewComponents: Record<string, React.ComponentType> = {
   dashboard: DashboardView,
@@ -23,22 +26,16 @@ const viewComponents: Record<string, React.ComponentType> = {
   alerts: AlertsView,
 };
 
-export default function Home() {
+function VsualApp() {
   const { currentView, sidebarOpen, setSidebarOpen } = useVSUALStore();
   const CurrentViewComponent = viewComponents[currentView] ?? DashboardView;
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
-      {/* Mobile sidebar overlay */}
       <MobileSidebarOverlay open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-      {/* Sidebar */}
       <Sidebar />
-
-      {/* Main Content */}
       <div className="flex flex-1 flex-col min-w-0">
         <Header />
-
         <main className="flex-1 overflow-auto">
           <AnimatePresence mode="wait">
             <motion.div
@@ -53,22 +50,45 @@ export default function Home() {
             </motion.div>
           </AnimatePresence>
         </main>
-
-        {/* Footer */}
         <footer className="border-t border-border bg-card/50 px-4 py-3 mt-auto">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5">
-              <Zap className="h-3 w-3 text-primary" />
+              <Image src="/vsual-logo.png" alt="VSUAL" width={16} height={16} className="h-4 w-4 rounded" />
               <span className="font-semibold">VSUAL OS v1.0</span>
             </div>
-            <span>&copy; {new Date().getFullYear()} VSUAL. All rights reserved.</span>
+            <span>&copy; {new Date().getFullYear()} VSUAL Digital Media. All rights reserved.</span>
           </div>
         </footer>
       </div>
-
-      {/* Dialogs */}
       <NewLeadDialog />
       <LeadDetailSheet />
     </div>
   );
+}
+
+function AppRouter() {
+  const { appMode } = useVSUALStore();
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={appMode}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        className="min-h-screen"
+      >
+        {appMode === 'landing' && <LandingPage />}
+        {appMode === 'vsual-login' && <LoginPage mode="vsual-login" />}
+        {appMode === 'nxl-login' && <LoginPage mode="nxl-login" />}
+        {appMode === 'vsual' && <VsualApp />}
+        {appMode === 'nxl' && <NxlCommandCenter />}
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+export default function Home() {
+  return <AppRouter />;
 }

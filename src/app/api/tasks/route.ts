@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { z } from 'zod'
+
+const createTaskSchema = z.object({
+  title: z.string().min(2, 'Title must be at least 2 characters'),
+  description: z.string().optional().default(null),
+  status: z.enum(['pending', 'in_progress', 'completed']).optional().default('pending'),
+  priority: z.enum(['urgent', 'high', 'medium', 'low']).optional().default('medium'),
+  assignedTo: z.string().min(1, 'Assigned to is required'),
+  leadId: z.string().optional().default(null),
+  dueDate: z.string().optional().default(null),
+})
 
 // GET /api/tasks — Return all tasks with lead info
 export async function GET() {
@@ -19,24 +30,25 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { title, description, status, priority, assignedTo, leadId, dueDate } = body
 
-    if (!title || !assignedTo) {
+    const result = createTaskSchema.safeParse(body)
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Missing required fields: title, assignedTo' },
+        { error: 'Validation failed', details: result.error.flatten().fieldErrors },
         { status: 400 }
       )
     }
+    const data = result.data
 
     const task = await db.task.create({
       data: {
-        title,
-        description: description ?? null,
-        status: status ?? 'pending',
-        priority: priority ?? 'medium',
-        assignedTo,
-        leadId: leadId ?? null,
-        dueDate: dueDate ? new Date(dueDate) : null,
+        title: data.title,
+        description: data.description,
+        status: data.status,
+        priority: data.priority,
+        assignedTo: data.assignedTo,
+        leadId: data.leadId,
+        dueDate: data.dueDate ? new Date(data.dueDate) : null,
       },
       include: { lead: true },
     })

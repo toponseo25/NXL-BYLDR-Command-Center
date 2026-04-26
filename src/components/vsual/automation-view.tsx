@@ -45,14 +45,20 @@ export function AutomationView() {
   const activeAutomations = leads.filter(l => l.automationStarted);
   const availableLeads = leads.filter(l => !l.automationStarted && l.stage !== 'closed_won' && l.stage !== 'closed_lost');
 
-  const handleTriggerAutomation = (leadId: string) => {
-    toast.success('Automation started for this lead!', {
-      description: 'The 14-day funnel sequence has been triggered.',
-      action: {
-        label: 'View Lead',
-        onClick: () => {},
-      },
-    });
+  const handleTriggerAutomation = async (leadId: string) => {
+    try {
+      const response = await fetch(`/api/leads/${leadId}/automation`, { method: 'POST' })
+      if (!response.ok) throw new Error()
+      // Update local state
+      setLeads(prev => prev.map(l =>
+        l.id === leadId ? { ...l, automationStarted: true, automationDay: 1 } : l
+      ))
+      toast.success('Automation started!', {
+        description: 'The 14-day funnel sequence has been triggered.',
+      })
+    } catch {
+      toast.error('Failed to start automation')
+    }
   };
 
   return (
